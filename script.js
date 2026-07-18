@@ -46,7 +46,7 @@ let attendeeUnsub = null;
 const themeToggle = document.getElementById("themeToggle");
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
+  themeToggle.textContent = theme === "dark" ? "Light" : "Dark";
   localStorage.setItem("theme", theme);
 }
 applyTheme(localStorage.getItem("theme") || "light");
