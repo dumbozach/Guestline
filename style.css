@@ -50,15 +50,24 @@ h1, h2, h3 {
 
 .topbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  gap: 10px 16px;
+  padding: 14px 24px;
   background: var(--card);
   border-bottom: 3px solid var(--border);
   box-shadow: var(--shadow);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
 }
 
 .brand {
@@ -92,6 +101,31 @@ h1, h2, h3 {
   font-size: 0.9rem;
   color: var(--muted);
   font-weight: 700;
+  min-width: 0;
+}
+
+.auth-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 40vw;
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 12px 16px;
+  }
+  .brand {
+    font-size: 1.2rem;
+  }
+  .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+  .auth-status span {
+    max-width: 55vw;
+  }
 }
 
 .container {
