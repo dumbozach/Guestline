@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guestline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">🎈 Guestline</a>
+    <div class="row" style="gap: 14px;">
+      <div id="authStatus" class="auth-status"></div>
+      <button id="themeToggle" class="theme-toggle" type="button" title="Toggle dark mode">🌙</button>
+    </div>
+  </header>
+
+  <main id="app" class="container">
+
+    <!-- AUTH VIEW -->
+    <section id="authView" class="view hidden">
+      <div class="card auth-card">
+        <div class="tabs">
+          <button id="tabLogin" class="tab-btn active" type="button">Log In</button>
+          <button id="tabSignup" class="tab-btn" type="button">Sign Up</button>
+        </div>
+
+        <form id="loginForm" class="form">
+          <label>Email
+            <input type="email" id="loginEmail" required autocomplete="email">
+          </label>
+          <label>Password
+            <input type="password" id="loginPassword" required autocomplete="current-password">
+          </label>
+          <button type="submit" class="btn primary">Log In</button>
+        </form>
+
+        <form id="signupForm" class="form hidden">
+          <label>Name
+            <input type="text" id="signupName" required autocomplete="name">
+          </label>
+          <label>Email
+            <input type="email" id="signupEmail" required autocomplete="email">
+          </label>
+          <label>Password
+            <input type="password" id="signupPassword" required minlength="6" autocomplete="new-password">
+          </label>
+          <button type="submit" class="btn primary">Sign Up</button>
+        </form>
+
+        <div class="divider"><span>or</span></div>
+        <button id="googleSignIn" class="btn google" type="button">Continue with Google</button>
+        <p id="authError" class="error-text"></p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD VIEW -->
+    <section id="dashboardView" class="view hidden">
+      <div class="row between">
+        <h1>Your Events</h1>
+        <button id="showCreateForm" class="btn primary">+ New Event</button>
+      </div>
+      <div id="eventsList" class="events-list"></div>
+    </section>
+
+    <!-- CREATE EVENT VIEW -->
+    <section id="createView" class="view hidden">
+      <div class="card">
+        <h1>Create Event</h1>
+        <form id="createEventForm" class="form">
+          <label>Title
+            <input type="text" id="eventTitle" required>
+          </label>
+          <label>Date &amp; Time
+            <input type="datetime-local" id="eventTime" required>
+          </label>
+          <label>Location
+            <input type="text" id="eventLocation" required>
+          </label>
+          <label>Description
+            <textarea id="eventDescription" rows="4"></textarea>
+          </label>
+          <div class="row">
+            <button type="submit" class="btn primary">Create Event</button>
+            <button type="button" id="cancelCreate" class="btn secondary">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- EVENT / RSVP VIEW -->
+    <section id="eventView" class="view hidden">
+      <div class="card">
+        <div id="eventDetails"></div>
+
+        <div id="hostControls" class="hidden">
+          <hr>
+          <p class="muted">This is your event. Share this link with your guests:</p>
+          <div class="share-row">
+            <input type="text" id="shareLink" readonly>
+            <button id="copyLink" class="btn secondary" type="button">Copy</button>
+          </div>
+          <button id="deleteEvent" class="btn danger" type="button">Delete Event</button>
+        </div>
+
+        <div id="rsvpControls">
+          <hr>
+          <div id="rsvpForm">
+            <label>Your Name
+              <input type="text" id="rsvpName" placeholder="Enter your name">
+            </label>
+            <button id="rsvpSubmit" class="btn primary" type="button">RSVP</button>
+          </div>
+          <p id="rsvpConfirmed" class="hidden success-text">You're on the list! 🎉</p>
+        </div>
+
+        <hr>
+        <h3>Who's coming (<span id="attendeeCount">0</span>)</h3>
+        <ul id="attendeeList" class="attendee-list"></ul>
+      </div>
+    </section>
+
+    <p id="loadingMsg" class="muted">Loading...</p>
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
