@@ -65,9 +65,12 @@ h1, h2, h3 {
 
 .topbar-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  justify-content: flex-end;
+  gap: 10px 14px;
   margin-left: auto;
+  min-width: 0;
 }
 
 .brand {
@@ -84,6 +87,8 @@ h1, h2, h3 {
   border-radius: 50%;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
   font-size: 1.1rem;
   cursor: pointer;
   display: flex;
@@ -97,7 +102,7 @@ h1, h2, h3 {
 .auth-status {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 0.9rem;
   color: var(--muted);
   font-weight: 700;
@@ -108,7 +113,11 @@ h1, h2, h3 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 40vw;
+  max-width: 160px;
+}
+
+#logoutBtn {
+  flex-shrink: 0;
 }
 
 @media (max-width: 480px) {
@@ -124,7 +133,7 @@ h1, h2, h3 {
     margin-left: 0;
   }
   .auth-status span {
-    max-width: 55vw;
+    max-width: 38vw;
   }
 }
 
