@@ -78,7 +78,10 @@
             <input type="datetime-local" id="eventTime" required>
           </label>
           <label>Location
-            <input type="text" id="eventLocation" required>
+            <div class="autocomplete">
+              <input type="text" id="eventLocation" autocomplete="off" required>
+              <ul id="locationSuggestions" class="autocomplete-list hidden"></ul>
+            </div>
           </label>
           <label>Description
             <textarea id="eventDescription" rows="4"></textarea>

@@ -307,6 +307,47 @@ input:focus, textarea:focus {
 .share-row { display: flex; gap: 8px; margin: 10px 0; }
 .share-row input { flex: 1; }
 
+.autocomplete {
+  position: relative;
+}
+
+.autocomplete-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 6px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.autocomplete-list li {
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.autocomplete-list li:hover,
+.autocomplete-list li.active {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.location-link {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .attendee-list {
   list-style: none;
   padding: 0;

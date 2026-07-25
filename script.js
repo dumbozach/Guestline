@@ -169,6 +169,8 @@ document.getElementById("createEventForm").addEventListener("submit", async (e) 
     title,
     time,
     location,
+    lat: selectedLocationCoords && selectedLocationCoords.name === location ? selectedLocationCoords.lat : null,
+    lng: selectedLocationCoords && selectedLocationCoords.name === location ? selectedLocationCoords.lng : null,
     description,
     hostId: currentUser.uid,
     hostName: currentUser.displayName || currentUser.email,
@@ -176,8 +178,69 @@ document.getElementById("createEventForm").addEventListener("submit", async (e) 
   });
 
   document.getElementById("createEventForm").reset();
+  selectedLocationCoords = null;
   window.location.search = `?event=${docRef.id}`;
 });
+
+// ---------- Location autocomplete ----------
+const eventLocationInput = document.getElementById("eventLocation");
+const locationSuggestionsEl = document.getElementById("locationSuggestions");
+let selectedLocationCoords = null;
+let locationSearchDebounce = null;
+let locationSearchAbort = null;
+
+eventLocationInput.addEventListener("input", () => {
+  selectedLocationCoords = null;
+  const q = eventLocationInput.value.trim();
+  clearTimeout(locationSearchDebounce);
+  if (q.length < 3) {
+    hideLocationSuggestions();
+    return;
+  }
+  locationSearchDebounce = setTimeout(() => searchLocations(q), 350);
+});
+
+eventLocationInput.addEventListener("blur", () => {
+  setTimeout(hideLocationSuggestions, 150);
+});
+
+async function searchLocations(q) {
+  if (locationSearchAbort) locationSearchAbort.abort();
+  locationSearchAbort = new AbortController();
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&limit=5&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { signal: locationSearchAbort.signal });
+    const results = await res.json();
+    renderLocationSuggestions(results);
+  } catch (err) {
+    if (err.name !== "AbortError") hideLocationSuggestions();
+  }
+}
+
+function renderLocationSuggestions(results) {
+  if (!results || !results.length) {
+    hideLocationSuggestions();
+    return;
+  }
+  locationSuggestionsEl.innerHTML = "";
+  results.forEach(r => {
+    const li = document.createElement("li");
+    li.textContent = r.display_name;
+    li.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      eventLocationInput.value = r.display_name;
+      selectedLocationCoords = { name: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
+      hideLocationSuggestions();
+    });
+    locationSuggestionsEl.appendChild(li);
+  });
+  locationSuggestionsEl.classList.remove("hidden");
+}
+
+function hideLocationSuggestions() {
+  locationSuggestionsEl.classList.add("hidden");
+  locationSuggestionsEl.innerHTML = "";
+}
 
 async function loadDashboard() {
   const listEl = document.getElementById("eventsList");
@@ -236,7 +299,7 @@ async function loadEventView(eventId) {
 
   eventDetailsEl.innerHTML = `
     <h1>${escapeHtml(ev.title)}</h1>
-    <p class="meta">${formatDateTime(ev.time)} &middot; ${escapeHtml(ev.location)}</p>
+    <p class="meta">${formatDateTime(ev.time)} &middot; <a class="location-link" href="${mapsLinkFor(ev)}" target="_blank" rel="noopener">${escapeHtml(ev.location)}</a></p>
     <p>${escapeHtml(ev.description || "")}</p>
     <p class="muted">Hosted by ${escapeHtml(ev.hostName || "")}</p>
   `;
@@ -301,6 +364,13 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str || "";
   return div.innerHTML;
+}
+
+function mapsLinkFor(ev) {
+  const query = (typeof ev.lat === "number" && typeof ev.lng === "number")
+    ? `${ev.lat},${ev.lng}`
+    : ev.location || "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
 function formatDateTime(value) {
