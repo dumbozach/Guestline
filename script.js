@@ -151,6 +151,7 @@ function renderAuthStatus() {
 // ---------- Dashboard ----------
 document.getElementById("showCreateForm").addEventListener("click", () => {
   showView("create");
+  requestUserLocation();
 });
 document.getElementById("cancelCreate").addEventListener("click", () => {
   document.getElementById("createEventForm").reset();
@@ -188,6 +189,16 @@ const locationSuggestionsEl = document.getElementById("locationSuggestions");
 let selectedLocationCoords = null;
 let locationSearchDebounce = null;
 let locationSearchAbort = null;
+let userCoords = null;
+
+function requestUserLocation() {
+  if (userCoords || !navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
+    () => { /* permission denied or unavailable — autocomplete just won't be location-biased */ },
+    { timeout: 5000 }
+  );
+}
 
 eventLocationInput.addEventListener("input", () => {
   selectedLocationCoords = null;
@@ -208,13 +219,32 @@ async function searchLocations(q) {
   if (locationSearchAbort) locationSearchAbort.abort();
   locationSearchAbort = new AbortController();
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=0&limit=5&q=${encodeURIComponent(q)}`;
+    let url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(q)}`;
+    if (userCoords) {
+      // Bias (not restrict) results toward a box around the user's location.
+      const d = 0.5;
+      const viewbox = [
+        userCoords.lng - d, userCoords.lat + d,
+        userCoords.lng + d, userCoords.lat - d
+      ].join(",");
+      url += `&viewbox=${viewbox}&bounded=0`;
+    }
     const res = await fetch(url, { signal: locationSearchAbort.signal });
     const results = await res.json();
     renderLocationSuggestions(results);
   } catch (err) {
     if (err.name !== "AbortError") hideLocationSuggestions();
   }
+}
+
+function shortLocationLabel(r) {
+  const a = r.address || {};
+  const streetAddr = [a.house_number, a.road].filter(Boolean).join(" ");
+  const primary = a.amenity || a.shop || a.building || r.name || streetAddr || a.road;
+  const locality = a.city || a.town || a.village || a.hamlet || a.suburb;
+  const region = a.state || a.region;
+  const parts = [primary, locality, region].filter(Boolean);
+  return [...new Set(parts)].join(", ");
 }
 
 function renderLocationSuggestions(results) {
@@ -224,12 +254,14 @@ function renderLocationSuggestions(results) {
   }
   locationSuggestionsEl.innerHTML = "";
   results.forEach(r => {
+    const label = shortLocationLabel(r) || r.display_name;
     const li = document.createElement("li");
-    li.textContent = r.display_name;
+    li.textContent = label;
+    li.title = r.display_name;
     li.addEventListener("mousedown", (e) => {
       e.preventDefault();
-      eventLocationInput.value = r.display_name;
-      selectedLocationCoords = { name: r.display_name, lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
+      eventLocationInput.value = label;
+      selectedLocationCoords = { name: label, lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
       hideLocationSuggestions();
     });
     locationSuggestionsEl.appendChild(li);
@@ -309,6 +341,7 @@ async function loadEventView(eventId) {
     hostControls.classList.remove("hidden");
     const link = `${window.location.origin}${window.location.pathname}?event=${eventId}`;
     document.getElementById("shareLink").value = link;
+    initInviteUI(ev, link);
   }
 
   if (localStorage.getItem(`rsvp_${eventId}`)) {
@@ -335,6 +368,40 @@ async function loadEventView(eventId) {
     input.select();
     navigator.clipboard.writeText(input.value);
   };
+
+  function initInviteUI(ev, link) {
+    const shareBtn = document.getElementById("shareBtn");
+    const emailRow = document.getElementById("emailInviteRow");
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile && navigator.share) {
+      shareBtn.classList.remove("hidden");
+      emailRow.classList.add("hidden");
+      shareBtn.onclick = () => {
+        navigator.share({
+          title: ev.title,
+          text: `You're invited to ${ev.title}!`,
+          url: link
+        }).catch(() => {});
+      };
+    } else {
+      shareBtn.classList.add("hidden");
+      emailRow.classList.remove("hidden");
+      document.getElementById("sendEmailInvite").onclick = () => {
+        const emailsInput = document.getElementById("inviteEmails");
+        const emails = emailsInput.value.split(",").map(s => s.trim()).filter(Boolean).join(",");
+        if (!emails) {
+          emailsInput.focus();
+          return;
+        }
+        const subject = encodeURIComponent(`You're invited: ${ev.title}`);
+        const body = encodeURIComponent(
+          `You're invited to ${ev.title}!\n\n${formatDateTime(ev.time)} at ${ev.location}\n\nRSVP here: ${link}`
+        );
+        window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
+      };
+    }
+  }
 
   document.getElementById("deleteEvent").onclick = async () => {
     if (!confirm("Delete this event? This cannot be undone.")) return;
